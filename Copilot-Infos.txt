@@ -1,0 +1,52 @@
+# Copilot-Infos.txt
+
+## Project: FLOW-MATIC--Origins- (Prolog Text Adventure)
+
+### General Instructions for Copilot/AI Agents
+
+- **Respect the guidelines and best practices described in `Project - Programming Text Adventures in Prolog _ general.html`.**
+  - Use dynamic predicates for mutable state (e.g., player, inventory, locks).
+  - Use `include/1` to structure code into multiple files (e.g., scenes/scene_01.pl).
+  - Use `asserta/1`, `assertz/1`, and `retract/1` for runtime changes.
+  - Use `is/2`, `=:=/2`, `=\=/2`, `<`, `>`, `=<`, `>=` for arithmetic and comparisons.
+  - Use `write/1` and `nl` for output (GNU Prolog), not `format/2` unless you know it's supported.
+  - Use the cut (`!`) and fail (`fail`) as described for control flow.
+
+- **Project Structure:**
+  - `adventure_manager.pl`: Main engine, game loop, command parsing, and generic logic.
+  - `scenes/scene_01.pl`: Contains room, transition, item, object/lock, and scene startup text facts.
+  - Additional scene files can be added in the `scenes/` directory and included as needed.
+  - `Project - Programming Text Adventures in Prolog _ general.html`: Contains course/project guidelines, Prolog tips, and best practices. Always review this for requirements.
+
+- **Game Design:**
+  - The game is room-based, not module/scene-based. Each room is a fact with a description.
+  - Transitions between rooms are defined with `room_transition/2` and `room_transition_text/3`.
+  - Items are placed in rooms with `item_at/2`.
+  - Locked objects (e.g., doors) are defined with `object/5` and unlocked with `use(Item)` if the player has the correct item.
+  - Scene startup text is defined with `scene_startup_text/2` and shown only once per room.
+
+- **Commands Supported:**
+  - `look.`: Show current room description.
+  - `look(Object).`: Show status of an object (e.g., door).
+  - `move(Room).`: Move to another room (if allowed).
+  - `take(Item).` / `drop(Item).`: Pick up or drop items.
+  - `use(Item).`: Use an item to unlock an object if possible.
+  - `inventory.`, `help.`, `quit.`: Standard utility commands.
+
+- **Splash Screen:**
+  - On load, a splash screen is shown. The game only starts after `start.` is entered.
+
+- **Extending the Game:**
+  - To add new rooms, transitions, items, or objects, add facts to the appropriate scene file.
+  - To add new logic or puzzles, extend `adventure_manager.pl` following the established patterns.
+
+- **Debugging:**
+  - Use `trace/0` and `notrace/0` for step-by-step debugging.
+
+- **General Advice:**
+  - Keep logic generic and data-driven where possible.
+  - Avoid hardcoding unless necessary for a specific puzzle or feature.
+  - Always check the HTML guide for requirements and Prolog idioms.
+
+---
+This file is intended as a starting point for anyone (human or AI) working on this project with Copilot or similar tools. Please update as the project evolves.
