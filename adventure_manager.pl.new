@@ -1,0 +1,164 @@
+﻿# filepath: c:\Users\setup\Documents\GitHub\FLOW-MATIC--Origins-\adventure_manager.pl
+:- dynamic(current_scene_module/1).
+:- dynamic(player_inventory/1).
+
+% --- Game Start ---
+start_adventure :-
+    write('Starting the Adventure!'), nl,
+    retractall(current_scene_module(_)),
+    retractall(player_inventory(_)),
+    InitialSceneFile = 'scenes/scene_01.pl', % Ensure this path is correct
+    manage_scene(InitialSceneFile).
+
+% --- Utility: Get filename from path ---
+get_file_name_from_path(FullPath, FileName) :-
+    atom_chars(FullPath, Chars),
+    reverse(Chars, RevChars),
+    (   memberchk('/', RevChars) % Check if there is a slash
+    ->  ( take_until_slash(RevChars, RevFileNameChars), % Get reversed filename chars
+          reverse(RevFileNameChars, FileNameChars),    % Reverse them back
+          atom_chars(FileName, FileNameChars) )         % Convert to atom
+    ;   FullPath = FileName % No slash found, the full path is the filename
+    ).
+
+% Helper for get_file_name_from_path/2
+% Takes characters from a reversed list until a '/' is encountered.
+take_until_slash([], []).
+take_until_slash(['/'|_Rest], []) :- !. % Found slash, stop.
+take_until_slash([Char|Tail], [Char|ResultTail]) :-
+    take_until_slash(Tail, ResultTail).
+
+% --- Utility: Get base name from filename (e.g., 'file.pl' -> 'file') ---
+get_base_name(FileNameWithExt, BaseName) :-
+    atom_chars(FileNameWithExt, CharsWithExt),
+    reverse(CharsWithExt, RevCharsWithExt),
+    (   strip_dot_and_extension(RevCharsWithExt, RevBaseChars) % Gets reversed base name
+    ->  reverse(RevBaseChars, BaseChars),
+        atom_chars(BaseName, BaseChars)
+    ;   % If strip_dot_and_extension fails (e.g., no dot), this whole branch fails.
+        % This will be caught by the ( ... -> true ; error ) in manage_scene.
+        fail
+    ).
+
+% Helper for get_base_name/2
+% Input: Reversed list of characters of a filename (e.g., ['l','p','.','e','m','a','n','e','l','i','f'])
+% Output: Reversed list of characters of the base name (e.g., ['e','m','a','n','e','l','i','f'])
+% Fails if no '.' is found.
+strip_dot_and_extension(['/' | _Rest], _) :- fail. % Should not have slashes here, indicates path vs filename issue
+strip_dot_and_extension(['.' | RestRevBaseChars], RestRevBaseChars) :- !.
+strip_dot_and_extension([_Char | TailRevChars], RevBaseChars) :-
+    TailRevChars \== [], % Ensure TailRevChars is not empty before recursing
+    strip_dot_and_extension(TailRevChars, RevBaseChars).
+
+% --- Scene Management ---
+manage_scene(SceneFile) :-
+    SceneFile == end_game, !,
+    write('Congratulations! You have completed the adventure.'), nl.
+manage_scene(SceneFile) :-
+    atom(SceneFile),
+    % Attempt to open the file to check existence
+    catch(see(SceneFile), Error, (write('Error checking file existence: '), write(Error), nl, fail)),
+    seen, % Close the file stream immediately
+    !, 
+    nl, write('Loading scene: '), write(SceneFile), nl,
+    
+    % Consult the new scene file. This makes its module and predicates available.
+    consult(SceneFile),
+
+    % Determine module name from SceneFile path (e.g., 'scenes/scene_01.pl' -> scene_01)
+    (   get_file_name_from_path(SceneFile, FileNameWithExt), % Gets 'scene_01.pl'
+        get_base_name(FileNameWithExt, ModuleAtom)          % Gets 'scene_01'
+    ->  true
+    ;   write('Error: Could not determine module name from scene file path: '), write(SceneFile), nl,
+        fail
+    ),
+
+    ModuleAtom:scene_id(_ID), % Changed ID to _ID to silence singleton warning
+    ModuleAtom:scene_title(Title),
+    ModuleAtom:scene_introduction(Intro),
+    ModuleAtom:next_scene_on_success(NextScene),
+
+    retractall(current_scene_module(_)),
+    asserta(current_scene_module(ModuleAtom)),
+
+    write('-------------------------------------'), nl,
+    write(Title), nl,
+    write('-------------------------------------'), nl,
+    ModuleAtom:init_scene,
+    write(Intro), nl,
+    scene_loop(SceneFile, NextScene, ModuleAtom).
+
+manage_scene(SceneFile) :-
+    write('Error: Scene file not found or invalid: '), write(SceneFile), nl,
+    write('Game cannot continue.'), nl.
+
+% --- Scene Game Loop ---
+scene_loop(CurrentSceneFile, NextSceneOnSuccess, Module) :-
+    nl, write('> '), % Corrected: removed backslash before quote
+    read_line_to_string(user_input, InputString),
+    normalize_space(string(TrimmedString), InputString),
+    ( TrimmedString == "" -> scene_loop(CurrentSceneFile, NextSceneOnSuccess, Module) ; true ),
+    ( parse_command_from_string(TrimmedString, Command) ->
+        ( catch(Module:process_scene_command(Command), E1, (write('Error in scene command processing: '), write(E1), nl, fail)) ->
+            true
+        ;
+            handle_generic_command(Command)
+        )
+    ;
+        write('I didn''t understand that. Try "help."'), nl
+    ),
+    ( catch(Module:check_win_condition, E2, (write('Error in win condition: '), write(E2), nl, fail)) ->
+        write('Scene completed successfully!'), nl,
+        manage_scene(NextSceneOnSuccess)
+    ; catch(Module:check_fail_condition, E3, (write('Error in fail condition: '), write(E3), nl, fail)) ->
+        write('Scene failed. Restarting scene...'), nl,
+        manage_scene(CurrentSceneFile)
+    ; 
+        scene_loop(CurrentSceneFile, NextSceneOnSuccess, Module)
+    ).
+
+% --- Command Parsing ---
+parse_command_from_string(String, Term) :-
+    ( atom_concat(_, '.', String) -> AtomInput = String % Already ends with a period
+    ; atom_concat(String, '.', AtomInput) % Add period if missing
+    ),
+    catch(term_string(Term, AtomInput, [variable_names(_VNames)]), 
+          error(syntax_error(Err), Ctx), 
+          (format('Syntax error in command: ~w (~w). Remember to use Prolog syntax (e.g., command(argument).).~n', [Err, Ctx]), fail)).
+
+% --- Generic Command Handling ---
+handle_generic_command(help) :-
+    display_help.
+handle_generic_command(inventory) :-
+    display_inventory.
+handle_generic_command(quit) :-
+    write('Quitting game.'), nl,
+    halt.
+handle_generic_command(Command) :-
+    ( current_scene_module(Module) ->
+        ( catch(Module:scene_help, _, fail) -> true
+        ; format('Unknown command: ~w. Try "help." or scene specific commands.~n', [Command]), nl
+        )
+    ; format('Unknown command: ~w. Try "help." (No scene module loaded).~n', [Command]), nl
+    ).
+
+display_help :-
+    write('Generic Commands:'), nl,
+    write('  help.           - Show this help message.'), nl,
+    write('  inventory.      - Show your inventory.'), nl,
+    write('  quit.           - Quit the game.'), nl,
+    write('Scene-specific commands may also be available.'), nl.
+
+display_inventory :-
+    findall(Item, player_inventory(Item), Items),
+    ( Items == [] -> write('Your inventory is empty.'), nl
+    ; write('You are carrying:'), nl,
+      forall(member(Item, Items), (write('  - '), write(Item), nl))
+    ).
+
+% --- Entry point to start the game from Prolog console ---
+% To run:
+% 1. Navigate to this directory in your terminal.
+% 2. Start GNU Prolog (e.g., gprolog).
+% 3. Consult this file: ?- ['adventure_manager.pl'].
+% 4. Start the game: ?- start_adventure.

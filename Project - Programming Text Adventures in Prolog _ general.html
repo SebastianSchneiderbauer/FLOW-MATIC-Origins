@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!-- saved from url=(0071)https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/ -->
+<html lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Project - Programming Text Adventures in Prolog | general</title>
+<meta name="generator" content="Jekyll v3.10.0">
+<meta property="og:title" content="Project - Programming Text Adventures in Prolog">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="General Information about the course">
+<meta property="og:description" content="General Information about the course">
+<link rel="canonical" href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/">
+<meta property="og:url" content="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/">
+<meta property="og:site_name" content="general">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Project - Programming Text Adventures in Prolog">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"General Information about the course","headline":"Project - Programming Text Adventures in Prolog","url":"https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <style class="anchorjs"></style><link rel="stylesheet" href="./Project - Programming Text Adventures in Prolog _ general_files/style.css">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/general/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body cz-shortcut-listen="true">
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://htl-leo-posethi.github.io/general/">general</a></h1>
+      
+
+      <h1 id="project---programming-text-adventures-in-prolog">Project - Programming Text Adventures in Prolog</h1>
+<h2 id="separating-the-source-base">Separating the Source Base<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#separating-the-source-base" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<p>In order to structure the source base it is possible to separate the code into different files. To include the content of a file into another file the predicate <code class="language-plaintext highlighter-rouge">include/1</code> is used. Example:</p>
+
+<pre><code class="language-Prolog">:- include('Library.pl').
+</code></pre>
+<p>This command replaces the above given line by the source text of <code class="language-plaintext highlighter-rouge">Library.pl</code>. This is similar as the <code class="language-plaintext highlighter-rouge">#include &lt;...&gt;</code> you know from C. Take care that Prolog does not provide a mechanism to prevent multiple includes. One has to track this manually.</p>
+
+<h2 id="debugging">Debugging<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#debugging" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<p>The more complex programs grow the more important is to see how they are executed. Prolog can be turned into debugging mode by calling the predicate <code class="language-plaintext highlighter-rouge">trace/0</code>. In this mode the execution of predicates is shown step by step. Next step is shown by hitting return. A debug run of a predicate can be aborted by hitting <code class="language-plaintext highlighter-rouge">a</code>.</p>
+
+<p>To turn off debugging mode the predicate <code class="language-plaintext highlighter-rouge">notrace/0</code> must be called.</p>
+
+<h2 id="managing-data-aka-dynamic-predicates">Managing Data aka Dynamic Predicates<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#managing-data-aka-dynamic-predicates" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<p>We have seen that a Prolog program is a logicbase of predicates, and so far we have entered clauses for those predicates directly in our programs. Prolog also allows us to manipulate the logicbase directly and provides built-in predicates to perform this function. The main ones are:</p>
+
+<p><strong>asserta(X):</strong> Adds the clause X as the first clause for its predicate. Like the other I/O predicates, it always fails on backtracking and does not undo its work.</p>
+
+<p><strong>assertz(X):</strong> Same as asserta/1, only it adds the clause X as the last clause for its predicate.</p>
+
+<p><strong>retract(X):</strong> Removes the clause X from the logicbase, again with a permanent effect that is not undone on backtracking.</p>
+
+<p>As an example we want to show the predicate <code class="language-plaintext highlighter-rouge">setNewLocation/1</code> which removes the player from his old location and puts them to the new location as given in the predicate’s argument. We assume a predicate <code class="language-plaintext highlighter-rouge">player(playerName, Location, CurrentHealth)</code> which tries to unify <code class="language-plaintext highlighter-rouge">Location</code> and <code class="language-plaintext highlighter-rouge">CurrentHealth</code> with the current parameters of <code class="language-plaintext highlighter-rouge">playerName</code>.</p>
+
+<pre><code class="language-Prolog">:- dynamic(player/3).
+
+setNewLocation(Location) :-
+    player('john doe', _, CurrentHealth), % get values of player
+    retract(player(_, _, _)), % remove current definition of player
+    asserta(player('john doe', Location, CurrentHealth)). % add definition of player with new location
+</code></pre>
+<p>Note that we have to declare the predicate <code class="language-plaintext highlighter-rouge">player/3</code> to be dynamic (first line) to be able to use <code class="language-plaintext highlighter-rouge">asserta/1</code>, <code class="language-plaintext highlighter-rouge">assertz/1</code> or <code class="language-plaintext highlighter-rouge">retract/1</code>.</p>
+
+<h2 id="fail">Fail<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#fail" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+
+<h2 id="cut">Cut<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#cut" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<p>Sometimes it is desirable to selectively turn off backtracking. Prolog provides a predicate that performs this function. It is called the cut, represented by an exclamation mark (!).</p>
+
+<p>The cut effectively tells Prolog to freeze all the decisions made so far in this predicate. That is, if required to backtrack, it will automatically fail without trying other alternatives.</p>
+
+<p>As an example we want to consider the following implementation of the predicate <code class="language-plaintext highlighter-rouge">max/3</code>:</p>
+
+<pre><code class="language-Prolog">max(X, Y, X) :-
+    X &gt;= Y.
+
+max(X, Y, Y).
+</code></pre>
+<p>When querying <code class="language-plaintext highlighter-rouge">max(3, 5, Z).</code> no harm can be detected since the first definition fails (<code class="language-plaintext highlighter-rouge">X &gt;= Y</code> fails and therefore the whole predicate fails). Due to backtracking the second definition is called which gives the expected result.</p>
+
+<p><code class="language-plaintext highlighter-rouge">max(5, 3, Z).</code> however behaves harmfully. We get the correct result <code class="language-plaintext highlighter-rouge">Z = 5</code> (by evaluating the first definition) but it keeps stuck in backtracking and also evaluates the second definition which results in <code class="language-plaintext highlighter-rouge">Z = 3</code> which does not make sense.</p>
+
+<p>In this case we have to prevent Prolog from backtracking which is done by the cut. We end up in a definition as shown in <a href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/Cut.pl">Cut.pl</a>.</p>
+
+<h2 id="random-numbers">Random Numbers<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#random-numbers" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<ul>
+  <li>Initialize the random number generator by calling <code class="language-plaintext highlighter-rouge">randomize/1</code> at the beginning of a program</li>
+  <li><code class="language-plaintext highlighter-rouge">random/3</code> generates a random number. In particular <code class="language-plaintext highlighter-rouge">random(Base, Limit, Number)</code> tries to unify <code class="language-plaintext highlighter-rouge">Number</code> such that it is between <code class="language-plaintext highlighter-rouge">Base</code> and <code class="language-plaintext highlighter-rouge">Limit</code>.</li>
+</ul>
+
+<h2 id="arithmetic">Arithmetic<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#arithmetic" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<ul>
+  <li>To “assign” a value to a variable we use <code class="language-plaintext highlighter-rouge">is/2</code>. You should be already familiar with. <code class="language-plaintext highlighter-rouge">X is N1 + N2</code> succeeds if it can unify <code class="language-plaintext highlighter-rouge">X</code> with <code class="language-plaintext highlighter-rouge">N1 + N2</code>. Of course, other expressions than <code class="language-plaintext highlighter-rouge">+</code> could be used.</li>
+  <li><code class="language-plaintext highlighter-rouge">=:=/2</code> checks whether two expressions are equal. <code class="language-plaintext highlighter-rouge">RandomNumber =:= 2</code> succeeds if <code class="language-plaintext highlighter-rouge">RandomNumber</code> is equal to <code class="language-plaintext highlighter-rouge">2</code>. Analogously the following predicates can be used:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">=\=</code> for unequal</li>
+      <li><code class="language-plaintext highlighter-rouge">&lt;</code> for smaller</li>
+      <li><code class="language-plaintext highlighter-rouge">&lt;=</code> for at most</li>
+      <li><code class="language-plaintext highlighter-rouge">&gt;=</code> for at least</li>
+      <li><code class="language-plaintext highlighter-rouge">&gt;</code> for greater</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="other-stuff">Other Stuff<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#other-stuff" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+<h3 id="emojis">Emojis<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#emojis" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h3>
+<p>… can be found under: https://1000logos.net/emoji-copy-and-paste/</p>
+
+<h3 id="formatted-output">Formatted Output<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#formatted-output" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h3>
+<p>Instead of consecutive calls of <code class="language-plaintext highlighter-rouge">write/1</code> it is more convenient to use the pre-defined <code class="language-plaintext highlighter-rouge">format/2</code> clause. <code class="language-plaintext highlighter-rouge">format("~w and ~w are forbidden to take~n", [Object1, Object2])</code> is equivalent to</p>
+
+<pre><code class="language-Prolog">write(Object1), write(' and '), write(Object2),
+write(' are forbidden to take'), nl
+</code></pre>
+
+<h2 id="playground">Playground<a class="anchorjs-link " href="https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/#playground" aria-label="Anchor" data-anchorjs-icon="" style="font: 1em / 1 anchorjs-icons; padding-left: 0.375em;"></a></h2>
+
+<pre><code class="language-Prolog">&gt; cd GameTemplate
+&gt; gprolog
+| ?- ['Template.pl'].
+compiling .../Template.pl for byte code...
+.../Template.pl compiled, 231 lines read - 27017 bytes written, 9 ms
+
+(2 ms) yes
+| ?- start.
+
+Enter commands using standard Prolog syntax.
+Available commands are:
+start.             -- to start the game.
+n.  s.  e.  w.     -- to go in that direction.
+take(Object).      -- to pick up an object.
+drop(Object).      -- to put down an object.
+look.              -- to look around you again.
+help.              -- to see this message again.
+inventory.         -- to list the objects you are holding.
+halt.              -- to end the game and quit.
+
+Your location: my house.
+
+There is a anotherthing here.
+There is a a third thing here.
+There is a a fourth thing here.
+
+There is a path to the south to garden.
+yes
+| ?- placeEnemyAt('my house').
+yes
+| ?- look.
+Your location: my house.
+
+👽 🛑:  A Alien with health 40 and strength 8 is approaching you!
+There is a anotherthing here.
+There is a a third thing here.
+There is a a fourth thing here.
+
+There is a path to the south to garden.
+
+
+yes
+</code></pre>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        This site is open source. <a href="https://github.com/htl-leo-posethi/general/edit/main/Project_PrologTextAdventures/Readme.md">Improve this page</a>.
+      </div>
+      
+    </div>
+    <script src="./Project - Programming Text Adventures in Prolog _ general_files/anchor.min.js.Herunterladen" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  
+
+</body></html>
