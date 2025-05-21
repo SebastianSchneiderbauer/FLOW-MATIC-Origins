@@ -12,7 +12,7 @@
 :- dynamic(shown_scene_text/1).
 
 % --- Room Definitions ---
-:- include('scenes/scene_01.pl').
+:- include('scenes/dummy.pl'). % this is the room that will we loaded. Change when testing, transitions are not yet implemented
 
 % --- Splash Screen ---
 splash :-
@@ -21,7 +21,15 @@ splash :-
     write('========================================='), nl,
     write('  Welcome to the Prolog Text Adventure!'), nl,
     write(''), nl,
-    write('Type start. to begin your journey.'), nl.
+    write('Type start. to begin your journey.'), nl, write('> '),
+    splash_loop.
+
+splash_loop :-
+    read(Input),
+    ( Input == start -> start ;
+      write('Please type start. to begin the game.'), nl, write('> '),
+      splash_loop
+    ).
 
 % --- Entry Point ---
 :- initialization(splash).
@@ -30,11 +38,11 @@ splash :-
 start :-
     retractall(player(_,_)),
     retractall(has(_,_)),
-    retractall(door_unlocked),
+    scene_reset, % Call scene-specific reset logic
     retractall(shown_scene_text(_)),
-    asserta(player('john doe', my_house)),
-    ( scene_startup_text(my_house, StartupText) ->
-        write(StartupText), nl,
+    asserta(player('Grace Hopper', my_house)),
+    ( room_intro_text(my_house, IntroText) ->
+        write(IntroText), nl,
         asserta(shown_scene_text(my_house))
     ; true ),
     write('Type help. for a list of commands.'), nl,
@@ -104,8 +112,8 @@ handle_command(move(NewRoom)) :-
         ; retract(player(Name, Location)),
           asserta(player(Name, NewRoom)),
           ( room_transition_text(Location, NewRoom, Text) -> write(Text), nl ; true ),
-          ( scene_startup_text(NewRoom, StartupText), \+ shown_scene_text(NewRoom) ->
-                write(StartupText), nl,
+          ( room_intro_text(NewRoom, IntroText), \+ shown_scene_text(NewRoom) ->
+                write(IntroText), nl,
                 asserta(shown_scene_text(NewRoom))
             ; true )
         )
@@ -147,19 +155,3 @@ handle_command(use(_Item)) :-
     write('There is nothing to use that on here.'), nl, !.
 handle_command(Command) :-
     write('Unknown command: '), write(Command), write('. Try "help."'), nl.
-
-% --- Helper: safe check for door_unlocked/0 ---
-door_is_unlocked :- predicate_property(door_unlocked, dynamic), door_unlocked, !.
-door_is_unlocked :- fail.
-
-% --- Helper: does an object block a transition? ---
-blocks_transition(door, my_house, garden).
-blocks_transition(_, _, _) :- fail.
-
-% --- Example Dynamic Facts (should be in scene files) ---
-% room(RoomName, Description, [Things...]).
-% room_transition(From, To).
-% room_transition_text(From, To, Text).
-% item_at(Item, Location).
-
-% --- End of File ---
