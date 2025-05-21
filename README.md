@@ -8,5 +8,5 @@ To begin, simply follow these steps:
    Double-click the `adventure_manager.pl` file to launch the program.
 
 <p align="center">
-  <img src="rml.png" alt="Project Logo" />
+  <img src="cover-image.png" alt="Project Logo" />
 </p>
