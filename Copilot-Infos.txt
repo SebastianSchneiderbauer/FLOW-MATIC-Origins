@@ -50,3 +50,4 @@
 
 ---
 This file is intended as a starting point for anyone (human or AI) working on this project with Copilot or similar tools. Please update as the project evolves.
+under the following link, there is a lot of usefull information about prolog-text-adventures: https://htl-leo-posethi.github.io/general/Project_PrologTextAdventures/
